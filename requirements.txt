@@ -1,0 +1,11 @@
+# Exact package versions in Python 3.12.
+
+# Core numeric and data handling
+numpy==2.5.5
+pandas==3.1.1
+
+# Machine learning algorithms (K-Means, Gaussian Mixture, Spectral Clustering, ...)
+scikit-learn==1.9.1
+
+# Deep learning / tensors (on Windows and macOS, the default PyPI build is CPU-only)
+torch==2.15.0
