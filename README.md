@@ -13,7 +13,9 @@ cluster it into district-sized communities with different dimensionality reducti
 ├── requirements.txt       # exact versions for Python packages
 ├── src/
 │   ├── __init__.py
-│   └── pums_loader.py     # downloads + loads ACS-PUMS person records
+│   ├── pums_loader.py     # downloads + loads ACS-PUMS person records
+│   ├── features.py        # turns each person into a numeric feature vector
+│   └── run_pca.py         # PCA experiment: how much each field drives the result
 └── data/                  # created by the data loader; NOT tracked by git
     └── raw/pums/2024_5-Year/
 ```
@@ -82,3 +84,29 @@ Notes on the data:
   (leading zeros kept, ~170 MB for NY); look the codes up in the
   [PUMS data dictionary](https://www.census.gov/programs-surveys/acs/microdata/documentation.html).
 - `*_ADJ` income columns are in constant 2024 dollars (adjusted with `ADJINC`).
+
+## 3. Build feature vectors and run PCA
+
+`src/features.py` keeps adults (18+) and turns each one into a vector of
+178 numbers (NY). Each field is converted according to its type:
+
+| Type | Fields | Conversion |
+|---|---|---|
+| Continuous | `AGEP`, `WKHP`, `JWMNP`, `PINCP_ADJ`, `PERNP_ADJ` | blank → 0, signed log on income, standardized |
+| Ordered codes | `SCHL`, `ENG` | code → number (blank `ENG` = English only → 0), standardized |
+| Yes/no | `SEX`, `NATIVITY`, `DIS` | 0/1 |
+| Categories | `MAR`, `CIT`, `MIL`, `MIG`, `ESR`, `COW`, `JWTRNS`, `RAC1P`, `HISP`, `SOCP`, `INDP`, `FOD1P`, `POBP`, `LANP`, `ANC1P` | one-hot; blank = its own "NA" category; categories under 0.5% of people merged |
+
+Codes with hundreds of values are grouped first: occupation → 23 SOC major
+groups, industry → ~19 sectors, field of degree → broad field, birthplace → regions.
+
+Not used as features: IDs (`SERIALNO`, `SPORDER`), geography (`STATE`, `PUMA`),
+the weight `PWGTP`, `OCCP` (same as `SOCP`) and `WAGP_ADJ` (almost the same as `PERNP_ADJ`).
+
+How much each field counts is set in `FIELD_WEIGHTS` in `src/features.py` (all 1.0 by default).
+
+```
+python -m src.features                 # build the matrix and list columns per field
+python -m src.run_pca                  # PCA on all NY adults (~1 min)
+python -m src.run_pca --sample 200000  # faster, on a random subset
+```
