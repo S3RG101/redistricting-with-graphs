@@ -9,3 +9,7 @@ scikit-learn==1.9.1
 
 # Deep learning / tensors (on Windows and macOS, the default PyPI build is CPU-only)
 torch==2.15.0
+
+# Maps and geography (reading PUMA boundary shapefiles, finding neighboring areas)
+geopandas==1.2.0
+libpysal==4.15.1
