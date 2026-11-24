@@ -13,3 +13,6 @@ torch==2.15.0
 # Maps and geography (reading PUMA boundary shapefiles, finding neighboring areas)
 geopandas==1.2.0
 libpysal==4.15.1
+
+# Drawing the district maps
+matplotlib==3.11.2

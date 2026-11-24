@@ -18,8 +18,9 @@ cluster it into district-sized communities with different dimensionality reducti
 │   ├── run_pca.py         # PCA experiment: how much each field drives the result
 │   ├── puma_profiles.py   # step 2: one community profile + population per PUMA
 │   ├── puma_graph.py      # step 3: neighboring PUMAs + similarity weights
-│   └── cluster_districts.py  # step 4: PUMAs -> 26 connected, balanced districts
-├── results/               # small CSV outputs of steps 2-4
+│   ├── cluster_districts.py  # step 4: PUMAs -> 26 connected, balanced districts
+│   └── draw_districts.py  # step 5: district maps (PNG)
+├── results/               # small CSV outputs of steps 2-4, maps/ from step 5
 └── data/                  # created by the loaders; NOT tracked by git
     ├── raw/pums/2024_5-Year/
     └── raw/tiger/         # PUMA boundary shapefile
@@ -129,6 +130,7 @@ Run the three steps in order; each saves a CSV in `results/` that the next one r
 python src\puma_profiles.py      # step 2 (~1 min)
 python src\puma_graph.py         # step 3 (downloads the 1.6 MB boundary file once)
 python src\cluster_districts.py  # step 4 (--tolerance 0.10 to allow +-10%)
+python src\draw_districts.py     # step 5 (downloads the 3 MB state outline once)
 ```
 
 | Step | What it does | Output |
@@ -140,3 +142,22 @@ python src\cluster_districts.py  # step 4 (--tolerance 0.10 to allow +-10%)
 "Profile variance explained" measures how similar the PUMAs inside each district
 are (0-100%, higher is more similar). The district CSV keeps both the raw and the
 balanced district of every PUMA, so both stages can be mapped.
+
+## 5. District maps
+
+`src/draw_districts.py` merges each district's PUMA shapes, trims them to New York's
+land outline, and saves three maps in `results/maps/` (state view + NYC zoom):
+
+| File | Shows |
+|---|---|
+| `districts_agglomerative.png` | final districts (after population balancing) |
+| `districts_agglomerative_raw.png` | districts straight from the clustering |
+| `population_deviation.png` | each final district's population vs the ideal (blue = too few, red = too many) |
+
+Colors only make neighboring districts different (4 colors, checked for
+color-blind safety); the number on each piece identifies the district.
+
+Known issue: neighbors in step 3 come from TIGER/Line shapes, which extend into
+water, so some districts are joined only across water (e.g. Staten Island + the
+Rockaways + Nassau's south shore; Westchester + Nassau across Long Island Sound).
+On the maps these show as a district with several separate pieces.
